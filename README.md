@@ -1,2 +1,9 @@
-# green-api
-Test case transition platform for message Max
+
+## Реализация в рамках тестового задания функционала отправки и получения сообщений Telegram в рамка green-api
+
+
+### Запуск проекта
+
+```bash
+npm run dev
+```
