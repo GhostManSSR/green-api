@@ -35,7 +35,6 @@ export const Header: FC<HeaderProps> = ({ ...props }) => {
         await persistor.flush();
         await persistor.purge();
         persistor.persist();
-        // props.setCurrentChat("")
     };
 
     return (
