@@ -1,10 +1,29 @@
+@import "@/assets/variables.less";
 
 .header{
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 0 85px;
+  height: 90px;
+  background: linear-gradient(@background-color, #f8f8f8);
+
+  @media(max-width: @tablet){
+    padding: 0 15px;
+  }
 
   &__column{
     display: flex;
 
   }
+
+  &__logo{
+    .font(@font-size: 24px;@font-weight: 500;);
+    color: #4D4D4D;
+
+    @media(max-width: @tablet){
+      .font(@font-size: 14px;);
+    }
+  }
+
 }

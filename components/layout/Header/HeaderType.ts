@@ -1,4 +1,5 @@
 
 export type HeaderProps = {
-    name: string
+    name?: string
+    setCurrentChat: (name?: string) => void
 }
