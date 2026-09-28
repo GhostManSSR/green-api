@@ -1,0 +1,356 @@
+@import "@/assets/generalStyle";
+@import "@/assets/variables";
+
+.chat {
+    .flexColumn();
+    width: 65%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+
+    background: #efeae2;
+
+    &__empty {
+        .flexCenter();
+
+        flex-direction: column;
+
+        width: 100%;
+        height: 100%;
+
+        color: #8a8a8a;
+
+        text-align: center;
+    }
+
+    &__empty-image {
+        width: 40px;
+        height: 40px;
+
+        margin-bottom: 16px;
+    }
+
+    &__empty-title {
+        color: #333;
+
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    &__empty-text {
+        margin-top: 6px;
+
+        color: #888;
+
+        font-size: 14px;
+    }
+
+    &__contact {
+        display: flex;
+
+        align-items: center;
+
+        flex-shrink: 0;
+
+        width: 100%;
+        min-height: 64px;
+
+        padding: 8px 16px;
+
+        box-sizing: border-box;
+
+        background: #ffffff;
+
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    &__contact-avatar {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        flex-shrink: 0;
+
+        width: 44px;
+        height: 44px;
+
+        overflow: hidden;
+
+        border-radius: 50%;
+
+        background: #d9eaf7;
+
+        img {
+            display: block;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+        }
+    }
+
+    &__contact-info {
+        min-width: 0;
+
+        margin-left: 12px;
+    }
+
+    &__contact-name {
+        overflow: hidden;
+
+        color: #222;
+
+        font-size: 15px;
+        font-weight: 600;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &__contact-status {
+        margin-top: 2px;
+
+        color: #8a8a8a;
+
+        font-size: 13px;
+    }
+
+    &__messages {
+        display: flex;
+
+        flex: 1;
+
+        flex-direction: column;
+
+        min-height: 0;
+
+        padding: 12px 24px 20px;
+
+        box-sizing: border-box;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        scrollbar-width: thin;
+        scrollbar-color: #c7c7c7 transparent;
+
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #c7c7c7;
+
+            border-radius: 6px;
+        }
+    }
+
+    &__load-more {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        align-self: center;
+
+        flex-shrink: 0;
+
+        min-height: 34px;
+
+        margin: 0 auto 14px;
+
+        padding: 7px 16px;
+
+        border: 1px solid #d5d5d5;
+        border-radius: 17px;
+
+        outline: none;
+
+        background: rgba(255, 255, 255, 0.9);
+
+        color: #555;
+
+        font-size: 13px;
+
+        cursor: pointer;
+
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            background: #ffffff;
+
+            border-color: #0088cc;
+
+            color: #0088cc;
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        &:disabled {
+            opacity: 0.6;
+
+            cursor: default;
+        }
+    }
+
+    &__messages-loading {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        flex: 1;
+
+        width: 100%;
+
+        color: #888;
+
+        font-size: 14px;
+    }
+
+    &__messages-empty {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        flex: 1;
+
+        width: 100%;
+
+        color: #888;
+
+        font-size: 14px;
+    }
+
+    &__message {
+        display: flex;
+        width: 100%;
+        margin-bottom: 5px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        &--incoming {
+            justify-content: flex-start;
+        }
+
+        &--outgoing {
+            justify-content: flex-end;
+        }
+    }
+
+    &__message-content {
+        max-width: 65%;
+        padding: 8px 12px;
+        box-sizing: border-box;
+        border-radius: 12px;
+        color: #222;
+        font-size: 14px;
+        line-height: 20px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    &__message--incoming &__message-content {
+        background: #ffffff;
+
+        border-bottom-left-radius: 4px;
+    }
+
+    &__message--outgoing &__message-content {
+        background: #d9fdd3;
+
+        border-bottom-right-radius: 4px;
+    }
+
+    &__message-type {
+        color: #777;
+
+        font-style: italic;
+    }
+
+    &__input-wrapper {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        gap: 10px;
+        width: 100%;
+        padding: 10px 16px;
+        box-sizing: border-box;
+        background: #ffffff;
+        border-top: 1px solid #e5e5e5;
+    }
+
+    &__input {
+        flex: 1;
+        min-width: 0;
+        height: 42px;
+        padding: 0 14px;
+        box-sizing: border-box;
+        border: 1px solid #dddddd;
+        border-radius: 21px;
+        outline: none;
+        background: #f5f5f5;
+        color: #222;
+        font-size: 14px;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:focus {
+            border-color: #0088cc;
+            background: #ffffff;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        &::placeholder {
+            color: #999;
+        }
+    }
+
+    &__send {
+        flex-shrink: 0;
+        height: 42px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 21px;
+        background: #0088cc;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            opacity 0.15s ease;
+
+        &:hover:not(:disabled) {
+            background: #0077b5;
+        }
+
+        &:active:not(:disabled) {
+            background: #006a9f;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+    }
+}
