@@ -15,8 +15,10 @@ export default function Home() {
     const [currentChat, setCurrentChat] = useState<string>("");
 
     useEffect(() => {
-        loading == true ? setCurrentChat("") : null;
-    },[])
+        if (loading) {
+            setCurrentChat("");
+        }
+    }, [loading]);
 
     const isAuthorized = isAuth.length > 0;
 

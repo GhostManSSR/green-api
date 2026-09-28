@@ -1,51 +1,17 @@
 "use client";
 
-import {
-    ChangeEvent,
-    FC,
-    SubmitEvent,
-    useState,
-} from "react";
+import {ChangeEvent, FC, SubmitEvent, useState} from "react";
 
-import {
-    Button,
-} from "@/components/layout/Button";
-
-import {
-    Input,
-} from "@/components/layout/Input";
-
-import {
-    HttpProvider,
-} from "@/HttpProvider";
-
-import {
-    API_PATH,
-} from "@/utils/api";
-
-import {
-    useAppDispatch,
-} from "@/store/hooks";
-
-import {
-    setChats,
-} from "@/store/slices/chatsSlice";
-
-import {
-    setUser,
-} from "@/store/slices/userSlice";
-
+import {Button,} from "@/components/layout/Button";
+import {Input,} from "@/components/layout/Input";
+import {HttpProvider,} from "@/HttpProvider";
+import {API_PATH,} from "@/utils/api";
+import {useAppDispatch,} from "@/store/hooks";
+import {setUser,} from "@/store/slices/userSlice";
 import "./Authorization.less";
 
 interface GreenApiInstanceState {
-    stateInstance:
-        | "notAuthorized"
-        | "authorized"
-        | "blocked"
-        | "sleepMode"
-        | "starting"
-        | "yellowCard"
-        | "suspended";
+    stateInstance: | "notAuthorized" | "authorized" | "blocked" | "sleepMode" | "starting" | "yellowCard" | "suspended";
 }
 
 interface GreenApiChat {
@@ -62,34 +28,13 @@ const http = new HttpProvider(
 
 export const Authorization: FC<AuthorizationType> = () => {
     const dispatch = useAppDispatch();
+    const [idInstance, setIdInstance] = useState("");
+    const [apiTokenInstance, setApiTokenInstance,] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const [idInstance, setIdInstance] =
-        useState("");
-
-    const [
-        apiTokenInstance,
-        setApiTokenInstance,
-    ] = useState("");
-
-    const [loading, setLoading] =
-        useState(false);
-
-    const [error, setError] =
-        useState("");
-
-    const handleIdInstanceChange = (
-        event: ChangeEvent<HTMLInputElement>,
-    ): void => {
-        /*
-         * Разрешаем только цифры.
-         * Например: "11015502".
-         */
-        const numericValue =
-            event.target.value.replace(
-                /\D/g,
-                "",
-            );
-
+    const handleIdInstanceChange = (event: ChangeEvent<HTMLInputElement>,): void => {
+        const numericValue = event.target.value.replace(/\D/g, "",);
         setIdInstance(numericValue);
 
         if (error) {
@@ -97,21 +42,8 @@ export const Authorization: FC<AuthorizationType> = () => {
         }
     };
 
-    const handleApiTokenChange = (
-        event: ChangeEvent<HTMLInputElement>,
-    ): void => {
-        /*
-         * Убираем пробелы, которые могут попасть
-         * при копировании токена.
-         *
-         * Не фильтруем буквы: токен GREEN-API
-         * является буквенно-цифровым.
-         */
-        const tokenValue =
-            event.target.value.replace(
-                /\s/g,
-                "",
-            );
+    const handleApiTokenChange = (event: ChangeEvent<HTMLInputElement>,): void => {
+        const tokenValue = event.target.value.replace(/\s/g, "",);
 
         setApiTokenInstance(tokenValue);
 
@@ -120,39 +52,27 @@ export const Authorization: FC<AuthorizationType> = () => {
         }
     };
 
-    const onSubmit = async (
-        event: SubmitEvent<HTMLFormElement>,
-    ): Promise<void> => {
+    const onSubmit = async (event: SubmitEvent<HTMLFormElement>,): Promise<void> => {
         event.preventDefault();
 
         setError("");
-
-        const normalizedIdInstance =
-            idInstance.trim();
-
-        const normalizedApiToken =
-            apiTokenInstance.trim();
+        const normalizedIdInstance = idInstance.trim();
+        const normalizedApiToken = apiTokenInstance.trim();
 
         if (!normalizedIdInstance) {
-            setError(
-                "Введите IdInstance.",
-            );
+            setError("Введите IdInstance.");
 
             return;
         }
 
         if (!/^\d+$/.test(normalizedIdInstance)) {
-            setError(
-                "IdInstance должен содержать только цифры.",
-            );
+            setError("IdInstance должен содержать только цифры.");
 
             return;
         }
 
         if (!normalizedApiToken) {
-            setError(
-                "Введите ApiTokenInstance.",
-            );
+            setError("Введите ApiTokenInstance.");
 
             return;
         }
@@ -166,77 +86,58 @@ export const Authorization: FC<AuthorizationType> = () => {
                 );
 
             if ("error" in stateResponse) {
-                setError(
-                    `Ошибка GREEN-API (${stateResponse.status}): ${stateResponse.message}`,
-                );
+                setError(`Ошибка GREEN-API (${stateResponse.status}): ${stateResponse.message}`,);
 
                 return;
             }
 
-            const instanceState =
-                stateResponse.stateInstance;
+            const instanceState = stateResponse.stateInstance;
 
             if (!instanceState) {
-                setError(
-                    "GREEN-API вернул некорректный статус инстанса.",
-                );
+                setError("GREEN-API вернул некорректный статус инстанса.");
 
                 return;
             }
 
             if (!instanceState) {
-                setError(
-                    "GREEN-API вернул некорректный статус инстанса.",
-                );
+                setError("GREEN-API вернул некорректный статус инстанса.");
 
                 return;
             }
 
             if (instanceState === "notAuthorized") {
-                setError(
-                    "Инстанс найден, но WhatsApp не авторизован. Подключите номер в личном кабинете GREEN-API.",
-                );
+                setError("Инстанс найден, но WhatsApp не авторизован. Подключите номер в личном кабинете GREEN-API.");
 
                 return;
             }
 
             if (instanceState === "blocked") {
-                setError(
-                    "Инстанс заблокирован. Проверьте его статус в личном кабинете GREEN-API.",
-                );
+                setError("Инстанс заблокирован. Проверьте его статус в личном кабинете GREEN-API.",);
 
                 return;
             }
 
             if (instanceState === "suspended" || instanceState === "yellowCard") {
-                setError(
-                    "Для инстанса действуют временные ограничения. Проверьте статус в GREEN-API.",
-                );
+                setError("Для инстанса действуют временные ограничения. Проверьте статус в GREEN-API.",);
 
                 return;
             }
 
             if (instanceState === "starting") {
-                setError(
-                    "Инстанс запускается. Подождите несколько минут и повторите попытку.",
-                );
+                setError("Инстанс запускается. Подождите несколько минут и повторите попытку.",);
 
                 return;
             }
 
             if (instanceState === "sleepMode") {
-                setError(
-                    "Инстанс находится в sleep mode. Включите телефон с WhatsApp и повторите попытку через несколько минут.",
-                );
+                setError("Инстанс находится в sleep mode. Включите телефон с WhatsApp и повторите попытку через несколько минут.",);
 
                 return;
             }
 
             if (instanceState !== "authorized") {
-                setError(
-                    "Не удалось подтвердить статус инстанса.",
-                );
-
+                setError("Не удалось подтвердить статус инстанса.",
+                    );
                 return;
             }
 
@@ -247,9 +148,7 @@ export const Authorization: FC<AuthorizationType> = () => {
                 );
 
             if (!Array.isArray(chats)) {
-                setError(
-                    "Не удалось получить список чатов. GREEN-API вернул некорректный ответ.",
-                );
+                setError("Не удалось получить список чатов. GREEN-API вернул некорректный ответ.",);
 
                 return;
             }
@@ -264,14 +163,9 @@ export const Authorization: FC<AuthorizationType> = () => {
             );
 
         } catch (requestError: unknown) {
-            console.error(
-                "Ошибка авторизации GREEN-API:",
-                requestError,
-            );
+            console.error("Ошибка авторизации GREEN-API:", requestError,);
 
-            setError(
-                "Не удалось подключиться к GREEN-API. Проверьте IdInstance, ApiTokenInstance и подключение к интернету.",
-            );
+            setError("Не удалось подключиться к GREEN-API. Проверьте IdInstance, ApiTokenInstance и подключение к интернету.",);
         } finally {
             setLoading(false);
         }
@@ -319,9 +213,7 @@ export const Authorization: FC<AuthorizationType> = () => {
                         </span>
 
                         <Input
-                            classList={[
-                                "authorization__input",
-                            ]}
+                            classList={["authorization__input",]}
                             type="text"
                             name="idInstance"
                             value={idInstance}
@@ -333,9 +225,7 @@ export const Authorization: FC<AuthorizationType> = () => {
                             pattern="[0-9]+"
                             autoComplete="username"
                             placeholder="Например, 11015502"
-                            onChange={
-                                handleIdInstanceChange
-                            }
+                            onChange={handleIdInstanceChange}
                         />
                     </label>
 
@@ -347,9 +237,7 @@ export const Authorization: FC<AuthorizationType> = () => {
                         </span>
 
                         <Input
-                            classList={[
-                                "authorization__input",
-                            ]}
+                            classList={["authorization__input",]}
                             type="password"
                             name="apiTokenInstance"
                             value={apiTokenInstance}
@@ -358,31 +246,22 @@ export const Authorization: FC<AuthorizationType> = () => {
                             minLength={1}
                             autoComplete="current-password"
                             placeholder="Введите токен доступа"
-                            onChange={
-                                handleApiTokenChange
-                            }
+                            onChange={handleApiTokenChange}
                         />
                     </label>
 
                     {error && (
-                        <div
-                            className="authorization__error"
-                            role="alert"
-                        >
+                        <div className="authorization__error" role="alert">
                             {error}
                         </div>
                     )}
 
                     <Button
-                        classList={[
-                            "authorization__submit",
-                        ]}
+                        classList={["authorization__submit",]}
                         type="submit"
                         disabled={loading}
                     >
-                        {loading
-                            ? "Проверка..."
-                            : "Продолжить"}
+                        {loading ? "Проверка..." : "Продолжить"}
                     </Button>
                 </form>
 
