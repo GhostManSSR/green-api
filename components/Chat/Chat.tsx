@@ -415,8 +415,9 @@ export const Chat: FC<ChatProps> = ({...props}) => {
                     <button
                         type="button"
                         className="chat__back"
+                        aria-label="Вернуться к списку чатов"
                         onClick={props.onBack}
-                        aria-label="Назад"
+                        title="Назад к чатам"
                     >
                         ←
                     </button>

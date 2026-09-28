@@ -18,53 +18,21 @@ import {getMessageText} from "@/utils/getMessageText";
 
 export const ChatList: FC<ChatListType> = ({...props}) => {
     const dispatch = useAppDispatch();
+
     const chats = useAppSelector((state) => state.chats.chats);
     const loaded = useAppSelector((state) => state.chats.loaded);
-    const profiles = useAppSelector(
-        (state) => state.chatProfiles.profiles
-    );
-
+    const profiles = useAppSelector((state) => state.chatProfiles.profiles);
     const loading = useAppSelector((state) => state.chats.loading);
+    const histories = useAppSelector((state) => state.chatHistory.histories);
+    const progress = useAppSelector((state) => state.chats.progress);
+    const idInstance = useAppSelector((state) => state.user.idInstance);
+    const apiTokenInstance = useAppSelector((state) => state.user.apiTokenInstance);
 
-    const histories = useAppSelector(
-        (state) => state.chatHistory.histories
-    );
-
-    const progress =
-        useAppSelector(
-            (state) =>
-                state.chats.progress
-        );
-
-
-    const idInstance =
-        useAppSelector(
-            (state) =>
-                state.user.idInstance
-        );
-
-
-    const apiTokenInstance =
-        useAppSelector(
-            (state) =>
-                state.user.apiTokenInstance
-        );
-
-
-    const dataReady =
-        chats.length > 0 &&
-        chats.every((chat) => {
-            const hasProfile =
-                Boolean(profiles[chat.chatId]);
-
-            const hasHistory =
-                Object.prototype.hasOwnProperty.call(
-                    histories,
-                    chat.chatId
-                );
-
+    const dataReady = chats.length > 0 && chats.every((chat) => {
+            const hasProfile = Boolean(profiles[chat.chatId]);
+            const hasHistory = Object.prototype.hasOwnProperty.call(histories, chat.chatId);
             return hasProfile && hasHistory;
-        });
+    });
 
     useEffect(() => {
         if (!idInstance || !apiTokenInstance) {
@@ -72,10 +40,6 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
         }
 
         if (loaded && dataReady) {
-            console.log(
-                "Чаты, профили и истории уже загружены из Redux"
-            );
-
             return;
         }
 
@@ -124,20 +88,11 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                     }
 
                     const chat = response[i];
-
-                    console.log(
-                        `Обрабатываем чат ${i + 1}/${total}:`,
-                        chat
-                    );
-
                     let profile = profiles[chat.chatId];
 
                     if (!profile) {
                         try {
-                            let name =
-                                chat.name ||
-                                chat.chatId;
-
+                            let name = chat.name || chat.chatId;
                             let avatar = "";
 
                             if (!chat.chatId.includes("-")) {
@@ -147,8 +102,7 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                                         http.post<any>(
                                             `/waInstance${idInstance}/getContactInfo/${apiTokenInstance}`,
                                             {
-                                                chatId:
-                                                chat.chatId,
+                                                chatId: chat.chatId,
                                             }
                                         )
                                     );
@@ -157,20 +111,8 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                                     return;
                                 }
 
-                                console.log(
-                                    `Информация пользователя ${chat.chatId}:`,
-                                    info
-                                );
-
-                                name =
-                                    info?.name ||
-                                    info?.contactName ||
-                                    chat.name ||
-                                    chat.chatId;
-
-                                avatar =
-                                    info?.avatar ||
-                                    "";
+                                name = info?.name || info?.contactName || chat.name || chat.chatId;
+                                avatar = info?.avatar || "";
                             }
 
                             else {
@@ -190,15 +132,7 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                                     return;
                                 }
 
-                                console.log(
-                                    `Информация группы ${chat.chatId}:`,
-                                    info
-                                );
-
-                                name =
-                                    info?.subject ||
-                                    chat.name ||
-                                    chat.chatId;
+                                name = info?.subject || chat.name || chat.chatId;
 
                                 try {
 
@@ -217,12 +151,9 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                                         return;
                                     }
 
-                                    avatar =
-                                        avatarResponse?.urlAvatar ||
-                                        "";
+                                    avatar = avatarResponse?.urlAvatar || "";
 
                                 } catch (avatarError) {
-
                                     console.error(
                                         `Ошибка получения аватара ${chat.chatId}:`,
                                         avatarError
@@ -232,11 +163,8 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                             }
 
                             profile = {
-                                chatId:
-                                chat.chatId,
-
+                                chatId: chat.chatId,
                                 name,
-
                                 avatar,
                             };
 
@@ -253,13 +181,8 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
 
 
                             profile = {
-                                chatId:
-                                chat.chatId,
-
-                                name:
-                                    chat.name ||
-                                    chat.chatId,
-
+                                chatId: chat.chatId,
+                                name: chat.name || chat.chatId,
                                 avatar: "",
                             };
                         }
@@ -268,17 +191,12 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                     let lastMessage = "";
 
                     try {
-
                         const history =
                             await queuedRequest(() =>
-                                http.post<
-                                    LastMessageType[]
-                                >(
+                                http.post<LastMessageType[]>(
                                     `/waInstance${idInstance}/getChatHistory/${apiTokenInstance}`,
                                     {
-                                        chatId:
-                                        chat.chatId,
-
+                                        chatId: chat.chatId,
                                         count: 10,
                                     }
                                 )
@@ -288,33 +206,16 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                             return;
                         }
 
-                        console.log(
-                            `История ${chat.chatId}:`,
-                            history
-                        );
-
-                        if (
-                            Array.isArray(history)
-                        ) {
-
+                        if (Array.isArray(history)) {
                             dispatch(
                                 setChatHistory({
-                                    chatId:
-                                    chat.chatId,
-
-                                    messages:
-                                    history,
+                                    chatId: chat.chatId,
+                                    messages: history,
                                 })
                             );
 
-                            if (
-                                history.length > 0
-                            ) {
-
-                                lastMessage =
-                                    getMessageText(
-                                        history[0]
-                                    );
+                            if (history.length > 0) {
+                                lastMessage = getMessageText(history[0]);
                             }
                         }
 
@@ -328,27 +229,12 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                     }
 
                     const newChat: Chat = {
-
                         chatId:
                         chat.chatId,
-
-                        name:
-                            profile?.name ||
-                            chat.name ||
-                            chat.chatId,
-
-                        type:
-                            chat.type ||
-                            "",
-
-                        phoneNumber:
-                            chat.phoneNumber ||
-                            0,
-
-                        username:
-                            chat.username ||
-                            "",
-
+                        name: profile?.name || chat.name || chat.chatId,
+                        type: chat.type || "",
+                        phoneNumber: chat.phoneNumber || 0,
+                        username: chat.username || "",
                         lastMessage,
                     };
 
@@ -368,49 +254,28 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                     );
                 }
 
-                if (cancelled) {
-                    return;
-                }
-
-                console.log(
-                    "Итоговая загрузка:",
-                    result
-                );
+                if (cancelled) {return;}
 
                 dispatch(
                     setChats(result)
                 );
 
             } catch (error) {
-
                 if (cancelled) {
                     return;
                 }
-
                 console.error(
                     "Ошибка загрузки чатов:",
                     error
                 );
-
-                dispatch(
-                    setChats([])
-                );
+                dispatch(setChats([]));
             }
         };
 
         loadChats();
 
-        return () => {
-            cancelled = true;
-        };
-
-    }, [
-        idInstance,
-        apiTokenInstance,
-        loaded,
-        chats.length,
-        dispatch,
-    ]);
+        return () => {cancelled = true;};
+    }, [idInstance, apiTokenInstance, loaded, chats.length, dispatch]);
 
     if (loading) {
         return (
@@ -420,7 +285,6 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                     Загрузка чатов...{" "}{progress}%
                 </div>
                 <div className="list_chat_loading__bar">
-
                     <div
                         className="list_chat_loading__progress"
                         style={{
@@ -428,27 +292,21 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                                 `${progress}%`,
                         }}
                     />
-
                 </div>
-
             </div>
         );
     }
 
     if (!chats.length) {
-
         return (
             <div className="list_chat_empty">
-
                 Список чатов пуст
-
             </div>
         );
     }
 
     return (
         <div className="list_chat">
-
             {chats.map(
                 (chat) => (
                     <ChatItem
@@ -460,10 +318,8 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
                         currentChat={props.currentChat}
                         lastMessage={chat.lastMessage}
                     />
-
                 )
             )}
-
         </div>
     );
 };

@@ -5,43 +5,25 @@ import {
 
 export interface ChatMessage {
     type: "incoming" | "outgoing";
-
     idMessage: string;
-
     timestamp: number;
-
     typeMessage: string;
-
     chatId: string;
-
     chatType?: string;
-
     textMessage?: string;
-
     extendedTextMessage?: {
         text?: string;
     };
-
     caption?: string;
-
     fileName?: string;
-
     downloadUrl?: string;
-
     senderId?: string;
-
     senderName?: string;
-
     senderType?: string;
-
     senderContactName?: string;
-
     isForwarded?: boolean;
-
     isEdited?: boolean;
-
     isDeleted?: boolean;
-
     [key: string]: unknown;
 }
 
@@ -98,17 +80,6 @@ const chatHistorySlice = createSlice({
     initialState,
 
     reducers: {
-
-        /**
-         * Устанавливает первоначальную историю.
-         *
-         * В отличие от старого варианта здесь НЕТ:
-         *
-         * messages.slice(0, 10)
-         *
-         * потому что Redux должен хранить
-         * все уже загруженные сообщения.
-         */
         setChatHistory: (
             state,
             action: PayloadAction<{
@@ -134,14 +105,6 @@ const chatHistorySlice = createSlice({
                 );
         },
 
-
-        /**
-         * Добавляет одно новое сообщение
-         * из WebSocket.
-         *
-         * Если сообщение уже существует —
-         * ничего не делает.
-         */
         addMessage: (
             state,
             action: PayloadAction<{
@@ -179,24 +142,6 @@ const chatHistorySlice = createSlice({
             ];
         },
 
-
-        /**
-         * Объединяет уже загруженную историю
-         * с новой порцией сообщений.
-         *
-         * Например:
-         *
-         * Redux:
-         * 1..10
-         *
-         * API:
-         * 1..20
-         *
-         * Результат:
-         * 1..20
-         *
-         * без дублей.
-         */
         mergeChatHistory: (
             state,
             action: PayloadAction<{
@@ -222,10 +167,6 @@ const chatHistorySlice = createSlice({
                 );
         },
 
-
-        /**
-         * Очищает историю конкретного чата.
-         */
         clearChatHistory: (
             state,
             action: PayloadAction<string>
@@ -236,10 +177,6 @@ const chatHistorySlice = createSlice({
                 ];
         },
 
-
-        /**
-         * Очищает всю историю.
-         */
         clearAllHistory: (
             state
         ) => {

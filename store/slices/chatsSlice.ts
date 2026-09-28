@@ -31,25 +31,16 @@ const chatsSlice = createSlice({
     initialState,
 
     reducers: {
-        /*
-         * Авторизация успешна
-         */
         setAuth: (state) => {
             state.isAuth = true;
         },
 
-        /*
-         * Начинаем загрузку чатов
-         */
         startLoadingChats: (state) => {
             state.loading = true;
             state.loaded = false;
             state.progress = 0;
         },
 
-        /*
-         * Сохраняем все полученные чаты
-         */
         setChats: (
             state,
             action: PayloadAction<Chat[]>
@@ -61,9 +52,6 @@ const chatsSlice = createSlice({
             state.progress = 100;
         },
 
-        /*
-         * Изменение прогресса
-         */
         updateProgress: (
             state,
             action: PayloadAction<number>
@@ -71,9 +59,6 @@ const chatsSlice = createSlice({
             state.progress = action.payload;
         },
 
-        /*
-         * Полный выход из аккаунта
-         */
         clearChats: (state) => {
             state.chats = [];
 
