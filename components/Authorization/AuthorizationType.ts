@@ -1,0 +1,4 @@
+
+type AuthorizationType = {
+    isAuth: boolean
+}
