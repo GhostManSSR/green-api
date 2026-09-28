@@ -1,7 +1,6 @@
 "use client";
 
-import {useEffect, useRef} from "react";
-
+import {useEffect} from "react";
 import {HttpProvider} from "@/HttpProvider";
 import {API_PATH} from "@/utils/api";
 import {queuedRequest} from "@/utils/requestQueue";
@@ -18,22 +17,16 @@ export const useChatsLoader = () => {
     const idInstance = useAppSelector((state) => state.user.idInstance);
     const apiTokenInstance = useAppSelector((state) => state.user.apiTokenInstance);
     const loaded = useAppSelector((state) => state.chats.loaded);
-    const loading = useAppSelector((state) => state.chats.loading);
     const profiles = useAppSelector((state) => state.chatProfiles.profiles);
-
-    const loadingStartedRef = useRef(false);
 
     useEffect(() => {
         if (!idInstance || !apiTokenInstance) {
-            loadingStartedRef.current = false;
             return;
         }
 
-        if (loaded || loading || loadingStartedRef.current) {
+        if (loaded) {
             return;
         }
-
-        loadingStartedRef.current = true;
 
         let stopped = false;
 
@@ -42,7 +35,6 @@ export const useChatsLoader = () => {
                 dispatch(startLoadingChats());
 
                 const http = new HttpProvider(API_PATH);
-
                 const response = await queuedRequest(
                     () =>
                         http.get<GreenApiChat[]>(
@@ -51,37 +43,66 @@ export const useChatsLoader = () => {
                     "getChats"
                 );
 
+
                 if (stopped) {
                     return;
                 }
 
+
                 if (!Array.isArray(response)) {
-                    console.error(
-                        "getChats вернул некорректный ответ:",
-                        response
-                    );
+                    console.error("getChats вернул некорректный ответ:", response);
+
                     return;
                 }
+
 
                 if (response.length === 0) {
+                    dispatch(updateProgress(100));
                     dispatch(setChats([]));
+
                     return;
                 }
 
-                const total = response.length;
+                let totalOperations = 0;
+
+
+                for (const chat of response) {
+                    const profile = profiles[chat.chatId];
+
+                    if (profile) {
+                        totalOperations += 1;
+                    } else if (chat.chatId.includes("-")) {
+                        totalOperations += 3;
+                    } else {
+                        totalOperations += 2;
+                    }
+                }
+
+                totalOperations += 1;
+
+                let completedOperations = 1;
+
+                dispatch(updateProgress(Math.round((completedOperations / totalOperations) * 100)));
+
+                const completeOperation = () => {
+                    completedOperations++;
+                    const progress = Math.min(100, Math.round((completedOperations / totalOperations) * 100));
+                    dispatch(updateProgress(progress));
+                };
+
                 const result: Chat[] = [];
 
-                for (let i = 0; i < response.length; i++) {
+                for (const chat of response) {
                     if (stopped) {
                         return;
                     }
 
-                    const chat = response[i];
                     let profile = profiles[chat.chatId];
 
                     if (!profile) {
                         try {
                             let name = chat.name || chat.chatId;
+
                             let avatar = "";
 
                             if (!chat.chatId.includes("-")) {
@@ -91,8 +112,7 @@ export const useChatsLoader = () => {
                                             http.post<any>(
                                                 `/waInstance${idInstance}/getContactInfo/${apiTokenInstance}`,
                                                 {
-                                                    chatId:
-                                                    chat.chatId,
+                                                    chatId: chat.chatId,
                                                 }
                                             ),
                                         "getContactInfo"
@@ -100,6 +120,7 @@ export const useChatsLoader = () => {
 
                                 name = info?.name || info?.contactName || chat.name || chat.chatId;
                                 avatar = info?.avatar || "";
+                                completeOperation();
                             }
 
                             else {
@@ -109,14 +130,14 @@ export const useChatsLoader = () => {
                                             http.post<any>(
                                                 `/waInstance${idInstance}/getGroupData/${apiTokenInstance}`,
                                                 {
-                                                    chatId:
-                                                    chat.chatId,
+                                                    chatId: chat.chatId,
                                                 }
                                             ),
                                         "getGroupData"
                                     );
 
                                 name = info?.subject || chat.name || chat.chatId;
+                                completeOperation();
 
                                 try {
                                     const avatarResponse =
@@ -125,18 +146,23 @@ export const useChatsLoader = () => {
                                                 http.post<any>(
                                                     `/waInstance${idInstance}/getAvatar/${apiTokenInstance}`,
                                                     {
-                                                        chatId:
-                                                        chat.chatId,
+                                                        chatId: chat.chatId,
                                                     }
                                                 ),
                                             "getAvatar"
                                         );
 
+
                                     avatar = avatarResponse?.urlAvatar || "";
 
                                 } catch (error) {
-                                    console.error(`Ошибка получения аватара ${chat.chatId}:`, error);
+                                    console.error(
+                                        `Ошибка получения аватара ${chat.chatId}:`,
+                                        error
+                                    );
                                 }
+
+                                completeOperation();
                             }
 
 
@@ -146,21 +172,30 @@ export const useChatsLoader = () => {
                                 avatar,
                             };
 
+
                             dispatch(setChatProfile(profile));
+
                         } catch (error) {
-                            console.error(`Ошибка получения профиля ${chat.chatId}:`, error);
+                            console.error(
+                                `Ошибка получения профиля ${chat.chatId}:`,
+                                error
+                            );
+
 
                             profile = {
                                 chatId: chat.chatId,
                                 name: chat.name || chat.chatId,
                                 avatar: "",
                             };
+
+                            completeOperation();
                         }
                     }
 
                     let lastMessage = "";
                     let lastMessageId = "";
                     let lastMessageTimestamp = 0;
+
 
                     try {
                         const history =
@@ -170,7 +205,7 @@ export const useChatsLoader = () => {
                                         `/waInstance${idInstance}/getChatHistory/${apiTokenInstance}`,
                                         {
                                             chatId: chat.chatId,
-                                            count: 10,
+                                            count: 10
                                         }
                                     ),
                                 "getChatHistory"
@@ -179,16 +214,28 @@ export const useChatsLoader = () => {
 
                         if (Array.isArray(history)) {
                             dispatch(
-                                setChatHistory({
-                                    chatId: chat.chatId,
-                                    messages: history,
-                                })
+                                setChatHistory({chatId: chat.chatId, messages: history})
                             );
 
+
                             if (history.length > 0) {
-                                const latestMessage = history[0];
+                                const latestMessage =
+                                    history.reduce(
+                                        (latest, current) =>
+                                            (current.timestamp || 0) >
+                                            (latest.timestamp || 0)
+                                                ? current
+                                                : latest,
+                                        history[0]
+                                    );
+
+
                                 lastMessage = getMessageText(latestMessage);
+
+
                                 lastMessageId = latestMessage.idMessage || "";
+
+
                                 lastMessageTimestamp = latestMessage.timestamp || 0;
                             }
                         }
@@ -200,6 +247,7 @@ export const useChatsLoader = () => {
                         );
                     }
 
+                    completeOperation();
 
                     result.push({
                         chatId: chat.chatId,
@@ -211,13 +259,10 @@ export const useChatsLoader = () => {
                         lastMessageId,
                         lastMessageTimestamp,
                     });
-
-
-                    dispatch(updateProgress(Math.round(((i + 1) / total) * 100)));
                 }
 
-
                 if (!stopped) {
+                    dispatch(updateProgress(100));
                     dispatch(setChats(result));
                 }
 
@@ -226,11 +271,8 @@ export const useChatsLoader = () => {
                     "Ошибка загрузки чатов:",
                     error
                 );
-
-                loadingStartedRef.current = false;
             }
         };
-
 
         void loadChats();
 
@@ -238,5 +280,5 @@ export const useChatsLoader = () => {
             stopped = true;
         };
 
-    }, [idInstance, apiTokenInstance, loaded, loading, dispatch, profiles,]);
+    }, [idInstance, apiTokenInstance, loaded, dispatch,]);
 };
