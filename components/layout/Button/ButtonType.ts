@@ -5,4 +5,5 @@ type ButtonType = {
     onClick?: () => void;
     disabled?: boolean;
     type?: 'button' | 'submit';
+    title?: string;
 }
