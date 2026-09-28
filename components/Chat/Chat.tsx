@@ -17,6 +17,7 @@ import {API_PATH,} from "@/utils/api";
 import {queuedRequest,} from "@/utils/requestQueue";
 import {mergeChatHistory, setChatHistory,} from "@/store/slices/chatHistorySlice";
 import {ChatProps, SendMessageResponse} from "@/components/Chat/ChatType";
+import Image from "next/image";
 
 
 export const Chat: FC<ChatProps> = ({...props}) => {
@@ -389,9 +390,11 @@ export const Chat: FC<ChatProps> = ({...props}) => {
     if (!props.currentChat || loading) {
         return (
             <div className="chat__empty">
-                <img
+                <Image
                     className="chat__empty-image"
-                    src="https://cdn-icons-png.flaticon.com/512/134/134914.png"
+                    src="/chats.png"
+                    width={40}
+                    height={40}
                     alt="Выберите чат"
                 />
 
@@ -434,7 +437,7 @@ export const Chat: FC<ChatProps> = ({...props}) => {
                             }
                         />
                     ) : (
-                        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt=""/>
+                        <Image src="/placeholder.png" width={40} height={40} alt=""/>
                     )}
 
                 </div>
