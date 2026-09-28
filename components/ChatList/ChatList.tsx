@@ -2,6 +2,7 @@
 
 import {FC, useEffect,} from "react";
 import "./ChatList.less";
+import {NewChat} from "@/components/NewChat";
 import {ChatItem,} from "@/components/ChatItem/ChatItem";
 import {Loading,} from "@/components/layout/Loading";
 import {useAppDispatch, useAppSelector,} from "@/store/hooks";
@@ -48,6 +49,9 @@ export const ChatList: FC<ChatListType> = ({...props}) => {
 
     return (
         <div className="list_chat">
+            <NewChat
+                setCurrentChat={props.setCurrentChat}
+            />
             {chats.map(
                 (chat) => (
                     <ChatItem

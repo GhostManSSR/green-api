@@ -38,6 +38,22 @@ const chatsSlice = createSlice({
             state.isAuth = true;
         },
 
+        addChat: (
+            state,
+            action: PayloadAction<Chat>
+        ) => {
+            const exists = state.chats.some(
+                (chat) =>
+                    chat.chatId === action.payload.chatId
+            );
+
+            if (exists) {
+                return;
+            }
+
+            state.chats.unshift(action.payload);
+        },
+
         startLoadingChats: (state) => {
             state.loading = true;
             state.loaded = false;
@@ -76,6 +92,7 @@ const chatsSlice = createSlice({
 
 export const {
     setAuth,
+    addChat,
     startLoadingChats,
     setChats,
     updateProgress,

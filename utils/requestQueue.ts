@@ -10,6 +10,7 @@ const RATE_LIMITS = {
     getAvatar: 150,
     sendMessage: 50,
     default: 1200,
+    checkAccount: 1100
 } as const;
 
 export type GreenApiMethod = keyof typeof RATE_LIMITS;
