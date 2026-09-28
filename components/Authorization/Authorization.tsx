@@ -160,10 +160,6 @@ export const Authorization: FC<AuthorizationType> = () => {
         try {
             setLoading(true);
 
-            /*
-             * Шаг 1. Проверяем, что idInstance и токен валидны,
-             * а инстанс реально существует.
-             */
             const stateResponse =
                 await http.get<GreenApiInstanceState>(
                     `/waInstance${normalizedIdInstance}/getStateInstance/${normalizedApiToken}`,
@@ -188,9 +184,14 @@ export const Authorization: FC<AuthorizationType> = () => {
                 return;
             }
 
-            /*
-             * Инстанс есть, но WhatsApp ещё не подключён.
-             */
+            if (!instanceState) {
+                setError(
+                    "GREEN-API вернул некорректный статус инстанса.",
+                );
+
+                return;
+            }
+
             if (instanceState === "notAuthorized") {
                 setError(
                     "Инстанс найден, но WhatsApp не авторизован. Подключите номер в личном кабинете GREEN-API.",
