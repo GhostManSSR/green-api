@@ -1,29 +1,233 @@
-@import "@/assets/variables.less";
+@import "@/assets/generalStyle";
+@import "@/assets/variables";
 
-.header{
+.header {
   display: flex;
-  justify-content: space-between;
+
   align-items: center;
-  padding: 0 85px;
-  height: 90px;
-  background: linear-gradient(@background-color, #f8f8f8);
+  justify-content: space-between;
 
-  @media(max-width: @tablet){
-    padding: 0 15px;
-  }
+  width: 100%;
+  height: 68px;
 
-  &__column{
+  padding: 0 32px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e7edf1;
+
+  box-shadow:
+          0 1px 3px rgba(35, 52, 65, 0.05);
+
+  &__column {
     display: flex;
+    align-items: center;
+    min-width: 0;
 
-  }
-
-  &__logo{
-    .font(@font-size: 24px;@font-weight: 500;);
-    color: #4D4D4D;
-
-    @media(max-width: @tablet){
-      .font(@font-size: 14px;);
+    &:last-child {
+      justify-content: flex-end;
+      gap: 14px;
     }
   }
 
+  &__logo {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.82;
+    }
+
+    &:focus-visible {
+      border-radius: 8px;
+      outline: 3px solid rgba(42, 171, 238, 0.25);
+      outline-offset: 4px;
+    }
+  }
+
+  &__logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin-right: 11px;
+    border-radius: 50%;
+
+    background: linear-gradient(135deg, #2aabee 0%, #0088cc 100%);
+
+    box-shadow: 0 4px 10px rgba(42, 171, 238, 0.26);
+
+    color: #ffffff;
+
+    svg {
+      width: 23px;
+      height: 23px;
+      transform: translate(-1px, 1px);
+    }
+  }
+
+  &__logo-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__logo-title {
+    overflow: hidden;
+    color: #222b33;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__logo-subtitle {
+    overflow: hidden;
+    margin-top: 1px;
+    color: #8a97a0;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 14px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__account {
+    display: flex;
+    flex-direction: column;
+    max-width: 190px;
+    padding-right: 14px;
+    border-right: 1px solid #e4eaee;
+    text-align: right;
+  }
+
+  &__account-label {
+    color: #8a97a0;
+    font-size: 11px;
+    line-height: 14px;
+  }
+
+  &__account-id {
+    overflow: hidden;
+    margin-top: 1px;
+    color: #52616d;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 17px;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid #dce5ea;
+    border-radius: 9px;
+    outline: none;
+    background: #ffffff;
+    color: #5b6872;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+            border-color 0.15s ease,
+            color 0.15s ease,
+            background-color 0.15s ease,
+            box-shadow 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: rgba(0, 136, 204, 0.42);
+      background: #f0f9fd;
+      color: #0088cc;
+    }
+
+    &:active:not(:disabled) {
+      background: #e2f3fb;
+    }
+
+    &:focus-visible {
+      border-color: #2aabee;
+      box-shadow: 0 0 0 3px rgba(42, 171, 238, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__logout-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 7px;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    transform: rotate(180deg);
+  }
+
+  @media (max-width: @tablet) {
+    height: 60px;
+    padding: 0 16px;
+
+    &__logo-icon {
+      width: 36px;
+      height: 36px;
+      margin-right: 9px;
+
+      svg {
+        width: 21px;
+        height: 21px;
+      }
+    }
+
+    &__logo-title {
+      font-size: 15px;
+    }
+
+    &__account {
+      display: none;
+    }
+
+    &__logout {
+      min-height: 36px;
+      padding: 0 11px;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    &__logo-subtitle {
+      display: none;
+    }
+
+    &__logout {
+      width: 36px;
+      min-width: 36px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    &__logout-icon {
+      margin-right: 0;
+    }
+
+    &__logout span:last-child {
+      display: none;
+    }
+  }
 }
