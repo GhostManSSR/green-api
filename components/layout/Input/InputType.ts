@@ -7,4 +7,5 @@ type InputProps = {
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     disabled?: boolean;
     onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    autoComplete?: string;
 }
