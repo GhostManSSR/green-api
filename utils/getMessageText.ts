@@ -1,64 +1,51 @@
-export const getMessageText = (
-    message: LastMessageType
-): string => {
+export const getMessageText = (message: LastMessageType): string => {
 
     switch (message.typeMessage) {
-
         case "textMessage":
-
             return (
                 message.textMessage ||
                 ""
             );
 
-
         case "extendedTextMessage":
-
             return (
                 message.extendedTextMessage?.text ||
                 ""
             );
 
-
-
         case "imageMessage":
-
             return (
                 message.caption ||
-                "📷 Фото"
+                "Фото"
             );
+
         case "videoMessage":
-
             return (
                 message.caption ||
-                "🎥 Видео"
+                "Видео"
             );
-        case "documentMessage":
 
+        case "documentMessage":
             return (
-                message.caption ||
-                `📎 ${
-                    message.fileName ||
-                    "Документ"
-                }`
+                message.caption || `${message.fileName || "Документ"}`
             );
 
         case "audioMessage":
-
             return (
                 message.caption ||
-                "🎵 Аудио"
+                "Аудио"
             );
 
         case "stickerMessage":
-            return "💬 Стикер";
+            return "Стикер";
 
         case "locationMessage":
-            return "📍 Геолокация";
-        case "contactMessage":
-            return "👤 Контакт";
-        default:
+            return "Геолокация";
 
+        case "contactMessage":
+            return "Контакт";
+
+        default:
             return `Сообщение: ${message.typeMessage}`;
     }
 };
