@@ -1,218 +1,158 @@
 "use client";
 
-import {
-    FC,
-    KeyboardEvent,
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import {FC, KeyboardEvent, useCallback, useEffect, useRef, useState} from "react";
 import "./Chat.less";
-import {useAppDispatch, useAppSelector,} from "@/store/hooks";
+import {useAppDispatch, useAppSelector} from "@/store/hooks";
 import {Input,} from "@/components/layout/Input";
 import {Button,} from "@/components/layout/Button";
-import {HttpProvider,} from "@/HttpProvider";
-import {API_PATH,} from "@/utils/api";
-import {queuedRequest,} from "@/utils/requestQueue";
-import {mergeChatHistory, setChatHistory,} from "@/store/slices/chatHistorySlice";
+import {HttpProvider} from "@/HttpProvider";
+import {getMessageText} from "@/utils/getMessageText";
+import {API_PATH} from "@/utils/api";
+import {queuedRequest} from "@/utils/requestQueue";
+import {mergeChatHistory, setChatHistory} from "@/store/slices/chatHistorySlice";
 import {ChatProps, SendMessageResponse} from "@/components/Chat/ChatType";
 import Image from "next/image";
+import {setChats} from "@/store/slices/chatsSlice";
 
 
 export const Chat: FC<ChatProps> = ({...props}) => {
-    const dispatch =
-        useAppDispatch();
+    const dispatch = useAppDispatch();
     const loading = useAppSelector((state) => state.chats.loading);
-
-    const histories =
-        useAppSelector(
-            state =>
-                state.chatHistory
-                    .histories,
-        );
-
-    const profiles =
-        useAppSelector(
-            state =>
-                state.chatProfiles
-                    .profiles,
-        );
-
-    const idInstance =
-        useAppSelector(
-            state =>
-                state.user.idInstance,
-        );
-
-    const apiTokenInstance =
-        useAppSelector(
-            state =>
-                state.user
-                    .apiTokenInstance,
-        );
+    const chats = useAppSelector((state) => state.chats.chats,);
+    const histories = useAppSelector((state) => state.chatHistory.histories,);
+    const profiles = useAppSelector(state => state.chatProfiles.profiles,);
+    const idInstance = useAppSelector(state => state.user.idInstance,);
+    const apiTokenInstance = useAppSelector(state => state.user.apiTokenInstance,);
 
 
-    const [message, setMessage] =
-        useState("");
+    const [message, setMessage] = useState("");
+    const [emojiOpen, setEmojiOpen] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [loadingHistory, setLoadingHistory,] = useState(false);
+    const [loadingMore, setLoadingMore,] = useState(false);
+    const [historyCount, setHistoryCount,] = useState(30);
+    const [hasMoreHistory, setHasMoreHistory,] = useState(true);
 
-    const [sending, setSending] =
-        useState(false);
+    const currentChatRef = useRef<string | undefined>(props.currentChat);
 
-    const [
-        loadingHistory,
-        setLoadingHistory,
-    ] = useState(false);
+    const syncLastMessage = useCallback((chatId: string, history: LastMessageType[],) => {
+            if (!history.length) {
+                return;
+            }
 
-    const [
-        loadingMore,
-        setLoadingMore,
-    ] = useState(false);
+            const latestMessage = history.reduce((latest, current) => {
+                    return (
+                        (current.timestamp || 0) >
+                        (latest.timestamp || 0)
+                    ) ? current : latest;
+                },
+                history[0],
+            );
 
-    const [
-        historyCount,
-        setHistoryCount,
-    ] = useState(30);
+            const lastMessage =
+                getMessageText(latestMessage);
 
-    const [
-        hasMoreHistory,
-        setHasMoreHistory,
-    ] = useState(true);
+            const lastMessageId =
+                latestMessage.idMessage || "";
 
-    const currentChatRef =
-        useRef<
-            string | undefined
-        >(props.currentChat);
+            const lastMessageTimestamp =
+                latestMessage.timestamp || 0;
+
+            const chatIndex = chats.findIndex(
+                (chat) => chat.chatId === chatId
+            );
+
+            if (chatIndex === -1) {
+                return;
+            }
+
+            const currentChat = chats[chatIndex];
+
+            if (currentChat.lastMessageId === lastMessageId && currentChat.lastMessageTimestamp === lastMessageTimestamp) {
+                return;
+            }
+
+            const updatedChats = [...chats];
+
+            updatedChats[chatIndex] = {
+                ...currentChat,
+                lastMessage,
+                lastMessageId,
+                lastMessageTimestamp,
+            };
+
+            dispatch(setChats(updatedChats));
+        },
+        [chats, dispatch],
+    );
 
     useEffect(() => {
-        currentChatRef.current =
-            props.currentChat;
+        currentChatRef.current = props.currentChat;
     }, [props.currentChat]);
 
 
-    const loadHistoryRef =
-        useRef<
-            (() => Promise<void>) | null
-        >(null);
+    const loadHistoryRef = useRef<(() => Promise<void>) | null>(null);
 
-    const fetchHistory =
-        useCallback(
-            async (
-                count: number,
-                merge = false,
-            ) => {
-                const chatId =
-                    currentChatRef.current;
+    const fetchHistory = useCallback(
+            async (count: number, merge = false,) => {
+                const chatId = currentChatRef.current;
 
-                if (
-                    !chatId ||
-                    !idInstance ||
-                    !apiTokenInstance
-                ) {
+                if (!chatId || !idInstance || !apiTokenInstance) {
                     return;
                 }
 
-                const http =
-                    new HttpProvider(
-                        API_PATH,
-                    );
+                const http = new HttpProvider(API_PATH);
 
-                const history =
-                    await queuedRequest(
-                        () =>
-                            http.post<
-                                LastMessageType[]
-                            >(
+                const history = await queuedRequest(() =>
+                            http.post<LastMessageType[]>(
                                 `/waInstance${idInstance}/getChatHistory/${apiTokenInstance}`,
                                 {
                                     chatId,
-
                                     count,
                                 },
                             ),
                     );
 
-                if (
-                    !Array.isArray(
-                        history,
-                    )
-                ) {
+                if (!Array.isArray(history)) {
                     return;
                 }
+
 
                 if (!merge) {
-                    dispatch(
-                        setChatHistory({
-                            chatId,
-                            messages:
-                            history,
-                        }),
-                    );
+                    syncLastMessage(chatId, history,);
+                    dispatch(setChatHistory({chatId, messages: history,}));
+                } else {
+                    dispatch(mergeChatHistory({chatId, messages: history,}));
                 }
 
-                else {
-                    dispatch(
-                        mergeChatHistory({
-                            chatId,
-                            messages:
-                            history,
-                        }),
-                    );
-                }
+                setHistoryCount(count);
 
-                setHistoryCount(
-                    count,
-                );
-
-                setHasMoreHistory(
-                    history.length >=
-                    count,
-                );
-            },
-            [
-                idInstance,
-                apiTokenInstance,
-                dispatch,
-            ],
-        );
+                setHasMoreHistory(history.length >= count);
+                setHistoryCount(count,);
+                setHasMoreHistory(history.length >= count);
+                },
+        [idInstance, apiTokenInstance, dispatch, syncLastMessage],
+    );
 
 
-    const loadHistory =
-        useCallback(
-            async () => {
-                if (
-                    !currentChatRef
-                        .current
-                ) {
-                    return;
-                }
+    const loadHistory = useCallback(
+        async () => {
+            if (!currentChatRef.current) {
+                return;
+            }
 
-                try {
-                    setLoadingHistory(
-                        true,
-                    );
+            try {
+                setLoadingHistory(true,);
 
-                    await fetchHistory(
-                        30,
-                        false,
-                    );
+                    await fetchHistory(30, false);
 
-                    setHistoryCount(
-                        30,
-                    );
+                    setHistoryCount(30);
 
-                    setHasMoreHistory(
-                        true,
-                    );
+                    setHasMoreHistory(true);
                 } catch (error) {
-                    console.error(
-                        "Ошибка получения истории:",
-                        error,
-                    );
+                    console.error("Ошибка получения истории:", error);
                 } finally {
-                    setLoadingHistory(
-                        false,
-                    );
+                    setLoadingHistory(false);
                 }
             },
             [fetchHistory],
@@ -220,8 +160,7 @@ export const Chat: FC<ChatProps> = ({...props}) => {
 
 
     useEffect(() => {
-        loadHistoryRef.current =
-            loadHistory;
+        loadHistoryRef.current = loadHistory;
     }, [loadHistory]);
 
     useEffect(() => {
@@ -238,28 +177,25 @@ export const Chat: FC<ChatProps> = ({...props}) => {
         };
     }, [props.currentChat, loadHistory,]);
 
-    const profile =
-        props.currentChat
-            ? profiles[
-                props.currentChat
-                ]
-            : undefined;
+    const profile = props.currentChat ? profiles[props.currentChat] : undefined;
+    const chatMessages = props.currentChat ? histories[props.currentChat] ?? [] : [];
 
-    const chatMessages =
-        props.currentChat
-            ? histories[
-            props.currentChat
-            ] ?? []
-            : [];
+    const orderedMessages = [...chatMessages,].sort((a, b) => a.timestamp - b.timestamp,);
 
-    const orderedMessages =
-        [
-            ...chatMessages,
-        ].sort(
-            (a, b) =>
-                a.timestamp -
-                b.timestamp,
-        );
+    const EMOJIS = [
+        "😀", "😃", "😄", "😁", "😆", "😅",
+        "😂", "🤣", "😊", "😇", "🙂", "🙃",
+        "😉", "😌", "😍", "🥰", "😘", "😎",
+        "🤩", "🥳", "😢", "😭", "😡", "🤬",
+        "😱", "🤔", "🤗", "🫡", "👍", "👎",
+        "👏", "🙏", "❤️", "🔥", "🎉", "💯",
+        "✨", "⭐", "💔", "❤️‍🔥", "😂", "🤣",
+    ];
+
+    const addEmoji = useCallback((emoji: string) => {
+        setMessage((current) => current + emoji);
+        setEmojiOpen(false);
+    }, []);
 
     useEffect(() => {
         if (!props.currentChat) {
@@ -275,114 +211,65 @@ export const Chat: FC<ChatProps> = ({...props}) => {
     const loadMoreHistory =
         useCallback(
             async () => {
-                if (
-                    !props.currentChat ||
-                    !idInstance ||
-                    !apiTokenInstance ||
-                    loadingMore ||
-                    !hasMoreHistory
-                ) {
+                if (!props.currentChat || !idInstance || !apiTokenInstance || loadingMore || !hasMoreHistory) {
                     return;
                 }
 
                 try {
-                    setLoadingMore(
-                        true,
-                    );
+                    setLoadingMore(true,);
 
-                    const nextCount =
-                        historyCount +
-                        30;
+                    const nextCount = historyCount + 30;
 
-                    await fetchHistory(
-                        nextCount,
-                        true,
-                    );
+                    await fetchHistory(nextCount, true);
                 } catch (error) {
-                    console.error(
-                        "Ошибка загрузки дополнительных сообщений:",
-                        error,
-                    );
+                    console.error("Ошибка загрузки дополнительных сообщений:", error,);
                 } finally {
-                    setLoadingMore(
-                        false,
-                    );
+                    setLoadingMore(false,);
                 }
             },
-            [
-                props.currentChat,
-                idInstance,
-                apiTokenInstance,
-                loadingMore,
-                hasMoreHistory,
-                historyCount,
-                fetchHistory,
-            ],
+            [props.currentChat, idInstance, apiTokenInstance, loadingMore, hasMoreHistory, historyCount, fetchHistory,],
         );
 
-    const sendMessage =
-        async () => {
-            const text =
-                message.trim();
+    const sendMessage = async () => {
+        const text = message.trim();
 
-            if (
-                !text ||
-                !props.currentChat ||
-                !idInstance ||
-                !apiTokenInstance ||
-                sending
-            ) {
+        if (!text || !props.currentChat || !idInstance || !apiTokenInstance || sending) {
+            return;
+        }
+
+        try {
+            setSending(true);
+            const http = new HttpProvider(API_PATH);
+            const response = await queuedRequest(
+                () =>
+                    http.post<SendMessageResponse>(
+                        `/waInstance${idInstance}/sendMessage/${apiTokenInstance}`,
+                        {
+                            chatId: props.currentChat,
+                            message: text,
+                        },
+                    ),
+                "sendMessage",
+            );
+
+            if (!("idMessage" in response) || !response.idMessage) {
+                console.error("Ошибка отправки сообщения:", response,);
+
                 return;
             }
-
-            try {
-                setSending(true);
-
-                const http =
-                    new HttpProvider(
-                        API_PATH,
-                    );
-
-                const response =
-                    await queuedRequest(
-                        () =>
-                            http.post<SendMessageResponse>(
-                                `/waInstance${idInstance}/sendMessage/${apiTokenInstance}`,
-                                {
-                                    chatId:
-                                    props.currentChat,
-
-                                    message:
-                                    text,
-                                },
-                            ),
-                    );
+            setMessage("");
+            await loadHistory();
+        } catch (error) {
+            console.error("Ошибка отправки сообщения:", error,);
+        } finally {
+            setSending(false);
+        }
+    };
 
 
-                setMessage("");
-                loadHistory();
-            } catch (error) {
-                console.error(
-                    "Ошибка отправки сообщения:",
-                    error,
-                );
-            } finally {
-                setSending(false);
-            }
-        };
-
-
-    const handleKeyDown =
-        (
-            event: KeyboardEvent<HTMLInputElement>,
-        ) => {
-            if (
-                event.key ===
-                "Enter" &&
-                !event.shiftKey
-            ) {
+    const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>,) => {
+            if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
-
                 sendMessage();
             }
         };
@@ -428,14 +315,7 @@ export const Chat: FC<ChatProps> = ({...props}) => {
                 <div className="chat__contact-avatar">
 
                     {profile?.avatar ? (
-                        <img
-                            src={
-                                profile.avatar
-                            }
-                            alt={
-                                profile.name
-                            }
-                        />
+                        <img src={profile.avatar} alt={profile.name}/>
                     ) : (
                         <Image src="/placeholder.png" width={40} height={40} alt=""/>
                     )}
@@ -445,16 +325,11 @@ export const Chat: FC<ChatProps> = ({...props}) => {
                 <div className="chat__contact-info">
 
                     <div className="chat__contact-name">
-                        {
-                            profile?.name ||
-                            props.currentChat
-                        }
+                        {profile?.name || props.currentChat}
                     </div>
 
                     <div className="chat__contact-status">
-                        {loadingHistory
-                            ? "Загрузка..."
-                            : "чат"}
+                        {loadingHistory ? "Загрузка..." : "чат"}
                     </div>
 
                 </div>
@@ -465,9 +340,9 @@ export const Chat: FC<ChatProps> = ({...props}) => {
             <div className="chat__messages">
 
                 {hasMoreHistory && (
-                    <button
+                    <Button
                         type="button"
-                        className="chat__load-more"
+                        classList={["chat__load-more"]}
                         disabled={
                             loadingMore ||
                             loadingHistory
@@ -476,31 +351,24 @@ export const Chat: FC<ChatProps> = ({...props}) => {
                             loadMoreHistory
                         }
                     >
-                        {loadingMore
-                            ? "Загрузка..."
-                            : "Загрузить ещё"}
-                    </button>
+                        {loadingMore ? "Загрузка..." : "Загрузить ещё"}
+                    </Button>
                 )}
 
-                {loadingHistory &&
-                    orderedMessages.length ===
-                    0 && (
+                {loadingHistory && orderedMessages.length === 0 && (
                         <div className="chat__messages-loading">
                             Загрузка
                             сообщений...
                         </div>
-                    )}
+                )}
 
-                {!loadingHistory &&
-                    orderedMessages.length ===
-                    0 && (
+                {!loadingHistory && orderedMessages.length === 0 && (
                         <div className="chat__messages-empty">
                             Сообщений нет
                         </div>
-                    )}
+                )}
 
-                {orderedMessages.map(
-                    item => {
+                {orderedMessages.map(item => {
                         const text =
                             item.textMessage ||
                             item
@@ -510,26 +378,15 @@ export const Chat: FC<ChatProps> = ({...props}) => {
 
                         return (
                             <div
-                                className={`chat__message ${
-                                    item.type ===
-                                    "outgoing"
-                                        ? "chat__message--outgoing"
-                                        : "chat__message--incoming"
-                                }`}
-                                key={
-                                    item.idMessage
-                                }
+                                className={`chat__message ${item.type === "outgoing" ? "chat__message--outgoing" : "chat__message--incoming"}`}
+                                key={item.idMessage}
                             >
                                 <div className="chat__message-content">
-
                                     {text || (
                                         <span className="chat__message-type">
-                                            {
-                                                item.typeMessage
-                                            }
+                                            {item.typeMessage}
                                         </span>
                                     )}
-
                                 </div>
                             </div>
                         );
@@ -539,42 +396,51 @@ export const Chat: FC<ChatProps> = ({...props}) => {
             </div>
 
             <div className="chat__input-wrapper">
+                <div className="chat__emoji-wrapper">
+
+                    <Button
+                        type="button"
+                        classList={["chat__emoji-button"]}
+                        onClick={() => setEmojiOpen((value) => !value)}
+                        disabled={sending}
+                        aria-label="Выбрать эмодзи"
+                        title="Эмодзи"
+                    >
+                        😊
+                    </Button>
+
+                    {emojiOpen && (
+                        <div className="chat__emoji-picker">
+                            {EMOJIS.map((emoji, index) => (
+                                <Button
+                                    key={`${emoji}-${index}`}
+                                    type="button"
+                                    classList={["chat__emoji"]}
+                                    onClick={() => addEmoji(emoji)}
+                                >
+                                    {emoji}
+                                </Button>
+                            ))}
+                        </div>
+                    )}
+
+                </div>
 
                 <Input
-                    classList={[
-                        "chat__input",
-                    ]}
+                    classList={["chat__input",]}
                     type="text"
                     placeholder="Написать сообщение..."
                     value={message}
-                    disabled={
-                        sending
-                    }
-                    onChange={
-                        event =>
-                            setMessage(
-                                event
-                                    .target
-                                    .value,
-                            )
-                    }
-                    onKeyDown={
-                        handleKeyDown
-                    }
+                    disabled={sending}
+                    onChange={event => setMessage(event.target.value,)}
+                    onKeyDown={handleKeyDown}
                 />
 
                 <Button
-                    classList={[
-                        "chat__send",
-                    ]}
+                    classList={["chat__send",]}
                     type="button"
-                    disabled={
-                        sending ||
-                        !message.trim()
-                    }
-                    onClick={
-                        sendMessage
-                    }
+                    disabled={sending || !message.trim()}
+                    onClick={sendMessage}
                 >
                     {sending ? "Отправка..." : "Отправить"}
                 </Button>
