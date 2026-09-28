@@ -1,11 +1,6 @@
 "use client";
 
-import {
-    FC,
-    ReactNode,
-    useEffect,
-    useState,
-} from "react";
+import {FC, ReactNode, useEffect, useState} from "react";
 
 interface MediaBreakPointProps {
     children: ReactNode;

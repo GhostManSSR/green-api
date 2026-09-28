@@ -350,6 +350,94 @@
         border-top: 1px solid #e5e5e5;
     }
 
+    &__emoji {
+      width: 34px;
+      height: 34px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 0;
+
+      border: none;
+      background: transparent;
+
+      border-radius: 6px;
+
+      font-size: 21px;
+      cursor: pointer;
+
+      transition:
+              background-color 0.15s ease,
+              transform 0.1s ease;
+
+      &:hover {
+        background: #f1f1f1;
+        transform: scale(1.1);
+      }
+
+      &-wrapper {
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      &-button {
+        width: 40px;
+        height: 40px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border: none;
+        background: transparent;
+
+        border-radius: 8px;
+
+        font-size: 22px;
+        cursor: pointer;
+
+        transition: background-color 0.15s ease;
+
+        &:hover {
+          background: #f1f1f1;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: default;
+        }
+      }
+
+      &-picker {
+        position: absolute;
+
+        bottom: calc(100% + 8px);
+        left: 0;
+
+        z-index: 100;
+
+        width: 280px;
+        max-height: 220px;
+
+        padding: 10px;
+
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+
+        background: #fff;
+
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+
+        overflow-y: auto;
+      }
+    }
+
     &__input {
         flex: 1;
         min-width: 0;

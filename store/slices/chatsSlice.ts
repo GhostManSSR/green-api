@@ -6,7 +6,10 @@ export interface Chat {
     type: string;
     phoneNumber: number;
     username: string;
+
     lastMessage: string;
+    lastMessageId: string;
+    lastMessageTimestamp: number;
 }
 
 interface ChatsState {
