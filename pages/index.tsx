@@ -9,31 +9,27 @@ import { MediaBreakPoint } from "@/utils/MediaBreakPoint";
 import { useAppSelector } from "@/store/hooks";
 
 export default function Home() {
-    const isAuth = useAppSelector(
-        (state) => state.user.idInstance
-    );
+    const isAuth = useAppSelector((state) => state.user.idInstance);
     const loading = useAppSelector((state) => state.chats.loading);
 
-    const [currentChat, setCurrentChat] =
-        useState<string>("");
+    const [currentChat, setCurrentChat] = useState<string>("");
 
     useEffect(() => {
         loading == true ? setCurrentChat("") : null;
     },[])
 
-    const isAuthorized =
-        isAuth.length > 0;
+    const isAuthorized = isAuth.length > 0;
 
     return (
         <>
             <Head>
                 <title>
-                    Application transfer message Max
+                    Telegram GREEN-API Messenger
                 </title>
 
                 <meta
                     name="description"
-                    content="Application transfer message Max"
+                    content="Telegram GREEN-API Messenger"
                 />
 
                 <meta
@@ -43,7 +39,7 @@ export default function Home() {
 
                 <link
                     rel="icon"
-                    href="/favicon.ico"
+                    href="/favicon-16x16.png"
                 />
             </Head>
 
@@ -53,9 +49,6 @@ export default function Home() {
                 />
             ) : (
                 <MediaBreakPoint
-                    /*
-                     * DESKTOP
-                     */
                     children={
                         <div className="general__block">
                             <ChatList
